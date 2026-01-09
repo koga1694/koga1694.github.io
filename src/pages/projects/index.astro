@@ -1,0 +1,195 @@
+---
+import MainLayout from '../../layouts/MainLayout.astro';
+import { getCollection } from 'astro:content';
+
+const projects = (await getCollection('projects'))
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+---
+
+<MainLayout title="Projects | MLOps Blog" description="인터랙티브 도구, 계산기, 파일 변환기 등">
+  <div class="projects-page">
+    <header class="page-header">
+      <h1>Projects</h1>
+      <p>직접 만든 인터랙티브 도구와 유틸리티를 공유합니다.</p>
+    </header>
+
+    <div class="projects-grid">
+      {projects.map((project) => (
+        <article class="project-card" class:list={{ featured: project.data.featured }}>
+          {project.data.featured && <span class="featured-badge">Featured</span>}
+          {project.data.heroImage && (
+            <div class="project-image">
+              <img src={project.data.heroImage} alt={project.data.title} />
+            </div>
+          )}
+          <div class="project-content">
+            <h2 class="project-title">
+              <a href={`/projects/${project.slug}`}>{project.data.title}</a>
+            </h2>
+            <p class="project-description">{project.data.description}</p>
+            <div class="project-tags">
+              {project.data.tags.slice(0, 4).map((tag) => (
+                <span class="tag">{tag}</span>
+              ))}
+            </div>
+            <div class="project-links">
+              <a href={`/projects/${project.slug}`} class="project-link">
+                View Details →
+              </a>
+              {project.data.demoUrl && (
+                <a href={project.data.demoUrl} class="project-link" target="_blank" rel="noopener noreferrer">
+                  Demo ↗
+                </a>
+              )}
+            </div>
+          </div>
+        </article>
+      ))}
+    </div>
+
+    {projects.length === 0 && (
+      <div class="empty-state">
+        <p>아직 프로젝트가 없습니다. 첫 번째 프로젝트를 추가해보세요!</p>
+      </div>
+    )}
+  </div>
+</MainLayout>
+
+<style>
+  .projects-page {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .page-header {
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .page-header h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+  }
+
+  .page-header p {
+    color: var(--color-text-secondary);
+  }
+
+  .projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .project-card {
+    position: relative;
+    background-color: var(--color-bg-secondary);
+    border-radius: 0.75rem;
+    border: 1px solid var(--color-border);
+    overflow: hidden;
+    transition: border-color 0.2s ease, transform 0.2s ease;
+  }
+
+  .project-card:hover {
+    border-color: var(--color-accent);
+    transform: translateY(-2px);
+  }
+
+  .project-card.featured {
+    border-color: var(--color-accent);
+  }
+
+  .featured-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background-color: var(--color-accent);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    z-index: 1;
+  }
+
+  .project-image {
+    width: 100%;
+    height: 180px;
+    overflow: hidden;
+    background-color: var(--color-bg);
+  }
+
+  .project-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+
+  .project-card:hover .project-image img {
+    transform: scale(1.05);
+  }
+
+  .project-content {
+    padding: 1.5rem;
+  }
+
+  .project-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  .project-title a {
+    color: var(--color-text);
+  }
+
+  .project-title a:hover {
+    color: var(--color-accent);
+  }
+
+  .project-description {
+    color: var(--color-text-secondary);
+    font-size: 0.9375rem;
+    margin-bottom: 1rem;
+    line-height: 1.6;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .project-tags {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+  }
+
+  .tag {
+    background-color: var(--color-bg);
+    color: var(--color-text-secondary);
+    padding: 0.125rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+  }
+
+  .project-links {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .project-link {
+    font-size: 0.875rem;
+    color: var(--color-accent);
+    font-weight: 500;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--color-text-secondary);
+  }
+</style>

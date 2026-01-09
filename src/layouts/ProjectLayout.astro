@@ -1,0 +1,221 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import Header from '../components/Header.astro';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  project: CollectionEntry<'projects'>;
+}
+
+const { project } = Astro.props;
+const { title, description, pubDate, updatedDate, heroImage, tags, demoUrl, sourceUrl } = project.data;
+---
+
+<BaseLayout title={title} description={description} ogImage={heroImage}>
+  <Header />
+  <article class="project-article">
+    <header class="project-header">
+      <div class="project-meta">
+        <time datetime={pubDate.toISOString()}>
+          {pubDate.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
+        </time>
+      </div>
+      <h1 class="project-title">{title}</h1>
+      <p class="project-description">{description}</p>
+
+      <div class="project-actions">
+        {demoUrl && (
+          <a href={demoUrl} class="action-btn primary" target="_blank" rel="noopener noreferrer">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polygon points="10 8 16 12 10 16 10 8"></polygon>
+            </svg>
+            Live Demo
+          </a>
+        )}
+        {sourceUrl && (
+          <a href={sourceUrl} class="action-btn secondary" target="_blank" rel="noopener noreferrer">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+            </svg>
+            View Source
+          </a>
+        )}
+      </div>
+
+      <div class="project-tags">
+        {tags.map((tag) => (
+          <span class="tag">{tag}</span>
+        ))}
+      </div>
+    </header>
+
+    {heroImage && (
+      <div class="hero-image">
+        <img src={heroImage} alt={title} />
+      </div>
+    )}
+
+    <div class="project-content">
+      <slot />
+    </div>
+
+    <footer class="project-footer">
+      <a href="/projects" class="back-link">← Back to all projects</a>
+    </footer>
+  </article>
+</BaseLayout>
+
+<style>
+  .project-article {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+  }
+
+  .project-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .project-meta {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    margin-bottom: 1rem;
+  }
+
+  .project-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 1rem;
+  }
+
+  .project-description {
+    font-size: 1.25rem;
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+  }
+
+  .project-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    transition: all 0.2s ease;
+  }
+
+  .action-btn.primary {
+    background-color: var(--color-accent);
+    color: white;
+  }
+
+  .action-btn.primary:hover {
+    background-color: var(--color-accent-hover);
+  }
+
+  .action-btn.secondary {
+    background-color: var(--color-bg-secondary);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+  }
+
+  .action-btn.secondary:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+
+  .project-tags {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    background-color: var(--color-bg-secondary);
+    color: var(--color-text-secondary);
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    border: 1px solid var(--color-border);
+  }
+
+  .hero-image {
+    margin-bottom: 2rem;
+    border-radius: 0.75rem;
+    overflow: hidden;
+  }
+
+  .hero-image img {
+    width: 100%;
+    height: auto;
+  }
+
+  .project-content {
+    font-size: 1.0625rem;
+    line-height: 1.8;
+  }
+
+  .project-content :global(h2) {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-top: 3rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .project-content :global(h3) {
+    font-size: 1.375rem;
+    font-weight: 600;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .project-content :global(p) {
+    margin-bottom: 1.25rem;
+  }
+
+  .project-content :global(.widget-container) {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background-color: var(--color-bg-secondary);
+    border-radius: 0.75rem;
+    border: 1px solid var(--color-border);
+  }
+
+  .project-footer {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .back-link {
+    color: var(--color-text-secondary);
+    font-size: 0.9375rem;
+  }
+
+  @media (max-width: 768px) {
+    .project-title {
+      font-size: 1.75rem;
+    }
+
+    .project-actions {
+      flex-direction: column;
+    }
+  }
+</style>

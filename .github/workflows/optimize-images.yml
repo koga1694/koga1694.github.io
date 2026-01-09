@@ -1,0 +1,114 @@
+name: Optimize Images
+
+on:
+  push:
+    paths:
+      - 'public/images/**/*.png'
+      - 'public/images/**/*.jpg'
+      - 'public/images/**/*.jpeg'
+      - 'src/content/**/images/**/*.png'
+      - 'src/content/**/images/**/*.jpg'
+      - 'src/content/**/images/**/*.jpeg'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  optimize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Sharp CLI
+        run: npm install -g sharp-cli
+
+      - name: Find and convert images to WebP
+        run: |
+          # Create a script to process images
+          cat << 'EOF' > convert-images.sh
+          #!/bin/bash
+
+          # Find all PNG and JPG files
+          find public/images src/content -type f \( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" \) 2>/dev/null | while read -r file; do
+            # Skip if WebP version already exists
+            webp_file="${file%.*}.webp"
+            if [ -f "$webp_file" ]; then
+              echo "Skipping $file (WebP exists)"
+              continue
+            fi
+
+            echo "Converting $file to WebP..."
+
+            # Convert to WebP with quality 80
+            sharp -i "$file" -o "$webp_file" -- webp --quality 80
+
+            # Get file sizes for comparison
+            original_size=$(stat -f%z "$file" 2>/dev/null || stat -c%s "$file")
+            webp_size=$(stat -f%z "$webp_file" 2>/dev/null || stat -c%s "$webp_file")
+
+            # Calculate savings
+            if [ "$original_size" -gt 0 ]; then
+              savings=$(( (original_size - webp_size) * 100 / original_size ))
+              echo "  Saved ${savings}% (${original_size} -> ${webp_size} bytes)"
+            fi
+          done
+          EOF
+
+          chmod +x convert-images.sh
+          ./convert-images.sh
+
+      - name: Compress existing WebP images
+        run: |
+          # Optimize existing WebP files if they're larger than 500KB
+          find public/images src/content -type f -name "*.webp" -size +500k 2>/dev/null | while read -r file; do
+            echo "Compressing $file..."
+            temp_file="${file}.tmp"
+            sharp -i "$file" -o "$temp_file" -- webp --quality 75
+            mv "$temp_file" "$file"
+          done
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Pull Request
+        if: steps.changes.outputs.has_changes == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore: optimize images to WebP format'
+          title: 'Image Optimization: Convert to WebP'
+          body: |
+            ## Automated Image Optimization
+
+            This PR converts new images to WebP format for better performance.
+
+            ### Changes
+            - Converted PNG/JPG images to WebP format
+            - Applied quality optimization (80%)
+            - Compressed large WebP files
+
+            ### Why WebP?
+            - 25-35% smaller file sizes compared to JPEG
+            - 26% smaller than PNG with similar quality
+            - Supported by all modern browsers
+          branch: chore/optimize-images
+          delete-branch: true
+          labels: |
+            optimization
+            automated
