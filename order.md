@@ -1,5 +1,5 @@
 # Role
-기술적 깊이와 인터랙티브한 기능을 모두 갖춘 깃허브 블로그(GitHub Pages) 구축해
+기술적 깊이와 인터랙티브한 기능을 모두 갖춘 깃허브 블로그(GitHub Pages) 구축해.
 
 # Context (My Persona)
 - 직업: AI 개발자 / MLOps 엔지니어
