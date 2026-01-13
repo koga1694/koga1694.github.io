@@ -1,0 +1,132 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/base/Header.astro';
+import Footer from '../components/base/Footer.astro';
+import PostCard from '../components/blog/PostCard.astro';
+import ProjectCard from '../components/projects/ProjectCard.astro';
+import { SITE_CONFIG } from '../config';
+
+const recentPosts = (await getCollection('blog', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.publishDate.valueOf() - a.data.publishDate.valueOf())
+  .slice(0, 3);
+
+const featuredProjects = (await getCollection('projects'))
+  .filter((p) => p.data.featured)
+  .sort((a, b) => b.data.publishDate.valueOf() - a.data.publishDate.valueOf())
+  .slice(0, 3);
+---
+
+<BaseLayout>
+  <Header />
+  <main class="flex-grow">
+    <!-- Hero Section -->
+    <section class="container mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32">
+      <div class="max-w-4xl mx-auto text-center">
+        <h1 class="text-5xl md:text-6xl font-bold text-gray-900 dark:text-gray-100 mb-6">
+          안녕하세요, {SITE_CONFIG.author}입니다
+        </h1>
+        <p class="text-xl md:text-2xl text-gray-600 dark:text-gray-400 mb-8">
+          AI/MLOps 엔지니어로 일하며, PyTorch, Kubernetes, AWS를 활용한 머신러닝 시스템을 구축합니다.
+        </p>
+        <p class="text-lg text-gray-500 dark:text-gray-500 mb-12">
+          기술 트러블슈팅, AI/ML 뉴스, 그리고 유용한 인터랙티브 도구를 공유합니다.
+        </p>
+        <div class="flex flex-wrap justify-center gap-4">
+          <a
+            href="/blog"
+            class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+          >
+            블로그 보기
+            <svg
+              class="ml-2 w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+            </svg>
+          </a>
+          <a
+            href="/projects"
+            class="inline-flex items-center px-6 py-3 border-2 border-gray-300 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-500 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors"
+          >
+            프로젝트 보기
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Recent Posts Section -->
+    {
+      recentPosts.length > 0 && (
+        <section class="bg-gray-50 dark:bg-gray-900/50 py-16">
+          <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center mb-8">
+              <h2 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                최근 포스트
+              </h2>
+              <a
+                href="/blog"
+                class="text-blue-600 dark:text-blue-400 hover:underline"
+              >
+                모든 포스트 보기 →
+              </a>
+            </div>
+            <div class="grid gap-6">
+              {recentPosts.map((post) => (
+                <PostCard
+                  title={post.data.title}
+                  description={post.data.description}
+                  publishDate={post.data.publishDate}
+                  tags={post.data.tags}
+                  category={post.data.category}
+                  slug={post.slug}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+      )
+    }
+
+    <!-- Featured Projects Section -->
+    {
+      featuredProjects.length > 0 && (
+        <section class="py-16">
+          <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center mb-8">
+              <h2 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                추천 프로젝트
+              </h2>
+              <a
+                href="/projects"
+                class="text-blue-600 dark:text-blue-400 hover:underline"
+              >
+                모든 프로젝트 보기 →
+              </a>
+            </div>
+            <div class="grid gap-6">
+              {featuredProjects.map((project) => (
+                <ProjectCard
+                  title={project.data.title}
+                  description={project.data.description}
+                  publishDate={project.data.publishDate}
+                  tags={project.data.tags}
+                  category={project.data.category}
+                  techStack={project.data.techStack}
+                  slug={project.slug}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+      )
+    }
+  </main>
+  <Footer />
+</BaseLayout>

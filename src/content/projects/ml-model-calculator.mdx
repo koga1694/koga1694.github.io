@@ -1,0 +1,47 @@
+---
+title: "ML 모델 크기 계산기"
+description: "모델 파라미터 수와 정밀도로 메모리 요구량 계산"
+publishDate: 2026-01-10
+tags: ["calculator", "ml", "tool"]
+category: "calculator"
+featured: true
+techStack: ["React", "TypeScript", "TailwindCSS"]
+draft: false
+---
+
+## 소개
+
+이 도구는 ML 모델의 메모리 및 저장 용량을 계산합니다.
+
+### 계산 공식
+
+모델 크기는 다음 공식으로 계산됩니다:
+
+$$
+\text{Size (GB)} = \frac{\text{Parameters} \times \text{Bytes per param}}{1024^3}
+$$
+
+### 정밀도별 바이트 수
+
+| 정밀도 | 바이트 수 | 예시 |
+|--------|----------|------|
+| FP32 | 4 bytes | 일반적인 학습 |
+| FP16 | 2 bytes | Mixed Precision |
+| INT8 | 1 byte | 양자화 추론 |
+| INT4 | 0.5 bytes | 극단적 압축 |
+
+## 사용 예시
+
+예를 들어, GPT-3 (175B 파라미터)를 FP16으로 저장하면:
+
+$$
+\text{Size} = \frac{175 \times 10^9 \times 2}{1024^3} = 326.16 \text{ GB}
+$$
+
+## 향후 계획
+
+- 인터랙티브 계산기 위젯 추가
+- 배치 크기 고려한 런타임 메모리 계산
+- GPU 메모리 추천 기능
+
+(위젯은 향후 React 컴포넌트로 추가 예정입니다)

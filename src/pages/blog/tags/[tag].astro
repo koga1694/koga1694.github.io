@@ -1,0 +1,70 @@
+---
+import { getCollection } from 'astro:content';
+import PageLayout from '../../../layouts/PageLayout.astro';
+import PostCard from '../../../components/blog/PostCard.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog', ({ data }) => !data.draft);
+
+  const allTags = new Set<string>();
+  posts.forEach((post) => {
+    post.data.tags.forEach((tag) => allTags.add(tag));
+  });
+
+  return Array.from(allTags).map((tag) => {
+    const filteredPosts = posts.filter((post) => post.data.tags.includes(tag));
+    return {
+      params: { tag },
+      props: {
+        posts: filteredPosts.sort(
+          (a, b) => b.data.publishDate.valueOf() - a.data.publishDate.valueOf()
+        ),
+      },
+    };
+  });
+}
+
+const { tag } = Astro.params;
+const { posts } = Astro.props;
+---
+
+<PageLayout
+  title={`Posts tagged with "${tag}"`}
+  description={`All blog posts tagged with ${tag}`}
+>
+  <div class="mb-8">
+    <a
+      href="/blog"
+      class="inline-flex items-center text-blue-600 dark:text-blue-400 hover:underline"
+    >
+      <svg
+        class="w-5 h-5 mr-2"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M15 19l-7-7 7-7"></path>
+      </svg>
+      Back to all posts
+    </a>
+  </div>
+
+  <div class="grid gap-8">
+    {
+      posts.map((post) => (
+        <PostCard
+          title={post.data.title}
+          description={post.data.description}
+          publishDate={post.data.publishDate}
+          tags={post.data.tags}
+          category={post.data.category}
+          slug={post.slug}
+        />
+      ))
+    }
+  </div>
+</PageLayout>

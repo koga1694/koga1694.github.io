@@ -1,0 +1,52 @@
+---
+import '../styles/global.css';
+import { SITE_CONFIG } from '../config';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title, description } = Astro.props;
+
+const pageTitle = title ? `${title} | ${SITE_CONFIG.title}` : SITE_CONFIG.title;
+const pageDescription = description || SITE_CONFIG.description;
+---
+
+<!doctype html>
+<html lang={SITE_CONFIG.lang}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+
+    <!-- SEO -->
+    <title>{pageTitle}</title>
+    <meta name="description" content={pageDescription} />
+
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={pageDescription} />
+    <meta property="og:locale" content={SITE_CONFIG.ogLocale} />
+
+    <!-- KaTeX CSS for math rendering -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"
+      integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV"
+      crossorigin="anonymous"
+    />
+
+    <!-- Dark mode initialization script (prevents FOUC) -->
+    <script is:inline>
+      const theme = localStorage.getItem('theme') ||
+                    (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+    </script>
+  </head>
+  <body class="min-h-screen">
+    <slot />
+  </body>
+</html>

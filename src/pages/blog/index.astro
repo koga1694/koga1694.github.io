@@ -1,0 +1,37 @@
+---
+import { getCollection } from 'astro:content';
+import PageLayout from '../../layouts/PageLayout.astro';
+import PostCard from '../../components/blog/PostCard.astro';
+
+const posts = await getCollection('blog', ({ data }) => !data.draft);
+const sortedPosts = posts.sort(
+  (a, b) => b.data.publishDate.valueOf() - a.data.publishDate.valueOf()
+);
+---
+
+<PageLayout
+  title="Blog"
+  description="Technical articles about AI, MLOps, and software engineering"
+>
+  <div class="grid gap-8">
+    {
+      sortedPosts.map((post) => (
+        <PostCard
+          title={post.data.title}
+          description={post.data.description}
+          publishDate={post.data.publishDate}
+          tags={post.data.tags}
+          category={post.data.category}
+          slug={post.slug}
+        />
+      ))
+    }
+    {
+      sortedPosts.length === 0 && (
+        <p class="text-center text-gray-500 dark:text-gray-400 py-12">
+          No blog posts yet. Check back soon!
+        </p>
+      )
+    }
+  </div>
+</PageLayout>

@@ -1,0 +1,29 @@
+---
+// Navigation component
+const navItems = [
+  { href: '/', label: 'Home' },
+  { href: '/blog', label: 'Blog' },
+  { href: '/projects', label: 'Projects' },
+  { href: '/about', label: 'About' },
+];
+
+const currentPath = Astro.url.pathname;
+---
+
+<nav class="flex items-center gap-6">
+  {
+    navItems.map((item) => (
+      <a
+        href={item.href}
+        class:list={[
+          'text-sm font-medium transition-colors hover:text-blue-600 dark:hover:text-blue-400',
+          currentPath === item.href || currentPath.startsWith(item.href + '/')
+            ? 'text-blue-600 dark:text-blue-400'
+            : 'text-gray-700 dark:text-gray-300',
+        ]}
+      >
+        {item.label}
+      </a>
+    ))
+  }
+</nav>
