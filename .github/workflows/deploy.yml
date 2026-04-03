@@ -24,6 +24,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: "npm"
+
+      # GitHub Pages 환경 초기화 (배포 컨텍스트 설정에 필수)
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
 
       # 의존성 설치 (package-lock.json 기준으로 정확히 설치)
       - name: Install dependencies
