@@ -19,5 +19,7 @@ export default function (eleventyConfig) {
       includes: "_includes",
       data: "_data",
     },
+    markdownTemplateEngine: "njk",
+    htmlTemplateEngine: "njk",
   };
 }
