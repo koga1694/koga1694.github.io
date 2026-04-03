@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="{{ site.lang }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="{{ description or site.description }}">
+  <title>{% if title %}{{ title }} — {{ site.title }}{% else %}{{ site.title }}{% endif %}</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">{{ site.title }}</a>
+      <ul class="nav-links">
+        <li><a href="/" {% if page.url == "/" %}class="active"{% endif %}>홈</a></li>
+        <li class="nav-dropdown">
+          <span {% if page.url.startsWith("/projects/") %}class="active"{% endif %}>프로젝트</span>
+          <ul class="dropdown-menu">
+            <li><a href="/projects/doyourself/">DoYourself</a></li>
+          </ul>
+        </li>
+        <li><a href="/about/" {% if page.url == "/about/" %}class="active"{% endif %}>소개</a></li>
+        <li><a href="{{ site.githubUrl }}" target="_blank" rel="noopener">GitHub</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main>
+    {{ content | safe }}
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <p>{{ site.author }} · <a href="{{ site.githubUrl }}" target="_blank" rel="noopener">{{ site.githubUrl }}</a></p>
+      <p class="footer-note">만들고 배운 것들의 기록</p>
+    </div>
+  </footer>
+</body>
+</html>

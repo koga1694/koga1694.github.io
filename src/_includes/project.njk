@@ -1,0 +1,27 @@
+---
+layout: base.njk
+---
+<div class="project-layout">
+  <aside class="project-sidebar">
+    <div class="sidebar-header">
+      <a href="{{ projectUrl }}" class="sidebar-project-title">{{ projectName }}</a>
+    </div>
+    <nav class="sidebar-nav">
+      {% for item in collections[projectTag] %}
+      <a href="{{ item.url }}" class="sidebar-link {% if item.url == page.url %}active{% endif %}">
+        {{ item.data.title }}
+      </a>
+      {% endfor %}
+    </nav>
+  </aside>
+
+  <article class="project-content">
+    <header class="page-header">
+      <h1>{{ title }}</h1>
+      {% if description %}<p class="page-desc">{{ description }}</p>{% endif %}
+    </header>
+    <div class="markdown-body">
+      {{ content | safe }}
+    </div>
+  </article>
+</div>
