@@ -1,0 +1,7 @@
+{
+  "layout": "project.njk",
+  "tags": ["doityourself"],
+  "projectName": "DoItYourself",
+  "projectTag": "doityourself",
+  "projectUrl": "/projects/doityourself/"
+}

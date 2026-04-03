@@ -13,9 +13,9 @@ title: 홈
 <section class="projects-section">
   <h2>프로젝트</h2>
   <div class="project-cards">
-    <a href="/projects/doyourself/" class="project-card">
+    <a href="/projects/doityourself/" class="project-card">
       <div class="card-tag">Electron · Discord · AI</div>
-      <h3>DoYourself</h3>
+      <h3>DoItYourself</h3>
       <p>코딩을 몰라도 Discord에서 대화하듯 소프트웨어를 만들 수 있는 데스크톱 앱. AI 에이전트가 실제 코드를 작성하고 배포까지 한다.</p>
       <div class="card-meta">
         <span class="tag">TypeScript</span>

@@ -6,9 +6,9 @@ export default function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("src/.nojekyll");
 
   // 프로젝트 섹션을 컬렉션으로 등록
-  eleventyConfig.addCollection("doyourself", (collectionApi) => {
+  eleventyConfig.addCollection("doityourself", (collectionApi) => {
     return collectionApi
-      .getFilteredByTag("doyourself")
+      .getFilteredByTag("doityourself")
       .sort((a, b) => (a.data.order || 99) - (b.data.order || 99));
   });
 
