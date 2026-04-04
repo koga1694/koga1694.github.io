@@ -4,6 +4,45 @@ description: "언제 무엇을 만들었는지 타임라인"
 order: 5
 ---
 
+## 2026-04-05 — 2~5차 반복 감사: 버그 제로 달성
+
+4번의 감사 사이클을 돌면서 1차에서 발견하지 못한 버그들을 추가로 56개 수정했다.
+
+**수정한 주요 버그들:**
+
+- **preload 보안**: `on()`/`removeAllListeners()`에 채널 화이트리스트 미적용 → IPC 채널 무제한 접근 가능했던 것 수정. `on()`이 이제 disposer 함수를 반환하도록 변경해서 리스너 누수도 차단.
+- **AI 프롬프트 버그**: `message = await thread.send(...)` 재할당으로 AI가 사용자 원본 메시지 대신 봇 응답을 다시 처리하던 문제. `const userPrompt = message.content`로 선캡처.
+- **세션 추적 버그**: `existingSession`이 있어도 항상 새 세션을 생성 → `existingSession ?? createSession()` 패턴으로 수정. turnCount/비용이 제대로 누적되지 않던 문제 해결.
+- **stderr 데드락**: Gemini/Codex 자식 프로세스가 stderr를 파이프로 연결하지만 소비하지 않아, 64KB 버퍼가 차면 프로세스 전체가 멈추는 버그. `proc.stderr?.resume()`으로 해결.
+- **PreviewServer.stop() 타이밍**: `this.server = null`을 `close()` 콜백 이전에 설정해서 두 번째 `stop()` 호출이 조기 resolve되던 문제. 참조를 먼저 캡처하고 null 처리하는 순서로 수정.
+- **spawn 에러 이벤트**: `proc.on('error')` 리스너 없으면 Node.js가 unhandled EventEmitter error로 프로세스를 종료. `proc.on('error', () => {})` 추가.
+- **UTC 월 경계 버그**: `getMonthlyCostKrw()`가 로컬 midnight 기준으로 월 시작을 계산 → UTC 기준으로 수정. 한국 시간(UTC+9)에서 월 경계 주변에 비용이 잘못 집계되던 문제.
+- **Windows 경로 구분자**: `path.join().replace(workspacePath, '')` 방식이 Windows에서 경로 구분자 불일치로 잘못 동작 → `path.relative()`로 교체.
+
+**테스트 정비:**
+- `vi.mock()` 팩토리에서 참조하는 변수는 `vi.hoisted()`로 선언해야 한다는 것을 이번에 제대로 정리. Vitest가 `vi.mock()` 호출을 파일 최상단으로 호이스팅하기 때문에, 그 위에 선언한 `const`도 초기화되지 않은 상태로 팩토리가 실행됨.
+- 5차 감사에서 tray, github 모듈, claude 엔진, keychain, embed, progress — 모두 클린 판정.
+
+**최종 상태**: 108 tests passed, TypeScript 클린, `npm run build` 성공.
+
+---
+
+## 2026-04-04 — 1차 코드 리뷰: 17개 버그 수정 + Vitest 테스트 체계 구축
+
+처음으로 전체 코드를 통독하며 버그를 찾아 수정했다.
+
+**Critical 버그들:**
+
+- **aiEngine 참조 분리 문제**: Discord `messageCreate` 핸들러의 클로저가 엔진 인스턴스를 직접 캡처하고 있어서, Settings에서 AI 엔진을 바꿔도 이미 실행 중인 봇은 구버전 엔진을 계속 쓰는 문제. `let services = { aiEngine, ... }` 공유 컨테이너를 만들고 핸들러가 `services.aiEngine`을 참조하도록 변경. 이제 `SETTINGS_SET`에서 `services.aiEngine = createEngine(...)` 직접 변이하면 Discord 봇이 자동으로 새 엔진을 씀.
+- **API 키 암호화 미적용**: `SettingsRepository`에 `KeychainService`가 주입되지 않아 Discord 메시지 핸들러에서 복호화된 API 키 대신 `enc:xxxxx` 원문이 AI 엔진에 전달되던 문제.
+- **Puppeteer 브라우저 미종료**: 스크린샷 실패 시 `browser.close()` 호출 없이 종료. `try-finally`로 수정.
+
+**테스트 체계 신규 구축:**
+- Vitest 설치 및 설정 (`vitest.config.ts`)
+- 테스트 파일 12개 작성 — 엔진, DB 레포지토리, workspace 매니저, GitHub 동기화, 스크린샷, 메시지 핸들러, i18n
+
+---
+
 ## 2026-04-03 — 후속 작업: ClaudeEngine 실제 구현 + UI 연결
 
 ### 수행 내용
