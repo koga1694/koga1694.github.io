@@ -4,6 +4,64 @@ description: "언제 무엇을 만들었는지 타임라인"
 order: 5
 ---
 
+## 2026-04-05 — 테스트 품질 전수 감사: 유령 테스트 제거 (201 → 215개)
+
+215개 테스트가 됐지만 숫자보다 **질**이 중요했다. 전수 감사를 해보니 소스를 전혀 import하지 않고 로직을 테스트 내부에서 재정의하는 "유령 테스트(ghost test)"가 여러 개 발견됐다.
+
+**유령 테스트란?** 실제 소스 코드와 완전히 분리된 테스트. 테스트가 통과해도 소스 버그를 잡지 못하며, 소스를 어떻게 수정해도 테스트는 계속 통과한다.
+
+**발견된 유령 테스트들:**
+
+- **`index.test.ts` (2개)**: `app.on('window-all-closed', () => app.quit())`을 테스트 내부에서 직접 정의하고 실행 → 실제 `index.ts`는 import조차 하지 않음. → 실제 `index.ts` import + `app.on` 등록 확인, `before-quit` isQuitting 가드 검증으로 교체 (2→7 테스트)
+- **`preload.test.ts` (5개)**: `contextBridge.exposeInMainWorld`를 검증하지 않고 그냥 함수를 직접 호출 → `preload.ts` import 후 `vi.hoisted()`로 contextBridge 캡처 패턴 확립, invoke/on/removeAllListeners/disposer 정확성 검증 (5→14 테스트)
+- **`template.test.ts` (4개)**: JavaScript 기본 `String.prototype.split()`만 테스트하는 코드 → `MARKETPLACE_TEMPLATES` 8개 데이터 무결성(고유 id, 필수 필드 존재)으로 대체
+
+**교훈**: 테스트 커버리지 숫자보다 "이 테스트가 실제 소스를 실행하는가?"가 훨씬 중요하다. 특히 Electron의 `contextBridge`, `ipcMain`처럼 mock이 복잡한 레이어일수록 유령 테스트가 숨어 있기 쉽다.
+
+---
+
+## 2026-04-05 — Phase 2/3 완료: Telegram · 배포 · 마켓플레이스 · MCP · Git 버전관리
+
+1차 코드 완성 후 가장 큰 기능 확장을 한 번에 진행했다. 에이전트 3개(bot-engineer, dashboard-engineer, infra-engineer)를 병렬로 실행해서 구현했다.
+
+**추가된 기능들:**
+
+**Telegram 봇** — Discord에 이어 Telegram도 지원. `telegraf` 프레임워크 사용. `/start`, `/new`, `/projects`, `/templates` 커맨드 + 인라인 버튼. Discord와 완전히 다른 API임에도 동일한 AI 엔진 레이어를 공유.
+
+**중요한 버그 (Stale Engine Capture)**: Telegram 핸들러에 AI 엔진 인스턴스를 직접 전달했을 때, Settings에서 엔진을 바꿔도 Telegram 봇은 구버전 엔진을 계속 사용하는 문제. 해결책은 인스턴스가 아닌 **getter 함수**를 전달하는 것: `registerHandlers(bot, () => services.aiEngine)`. 함수가 호출될 때마다 현재 엔진을 가져오므로 항상 최신 엔진을 사용한다.
+
+**원클릭 배포 (Vercel, Netlify)** — `npx vercel` / `npx netlify-cli`를 서브프로세스로 실행. 설정에서 토큰 입력, 프로젝트 상세에서 버튼 클릭 한 번으로 배포 완료. CLI를 npx로 실행하면 사용자가 별도 설치할 필요가 없다는 점이 이 패턴의 장점.
+
+**Git 버전관리 + 롤백** — 프로젝트 생성 시 `git init`, AI가 코드를 완성할 때마다 `git commit`. Discord/Telegram에서 "이전으로 되돌려줘"라고 하면 직전 커밋으로 `reset --hard`. 대시보드의 History 탭에서 타임라인 시각화. hash injection 방지를 위해 `/^[0-9a-f]{4,40}$/` 정규식 검증 필수.
+
+**MCP 플러그인 시스템** — Claude Agent SDK의 `mcpServers` 옵션 연동. 설정에서 MCP 서버 이름/커맨드/인자를 추가하면 Claude가 외부 DB, API 등을 직접 사용할 수 있다. `mcpServersJson TEXT` 컬럼에 JSON 직렬화해서 저장 (SQLite가 JSON 배열을 네이티브 지원 안 해서).
+
+**커뮤니티 마켓플레이스** — Discord `/marketplace` 슬래시 커맨드로 8개 프리셋 템플릿 선택. 선택하면 자동으로 프로젝트를 생성하고 타입별 프롬프트 가이드를 전송.
+
+**멀티유저 지원** — `Project` DB 모델에 `discordUserId`, `discordGuildId`, `telegramChatId` 필드 추가. `/projects` 커맨드가 각 사용자의 프로젝트만 필터링해서 표시.
+
+**최종 상태**: 186 tests passed, TypeScript 클린, 빌드 성공.
+
+---
+
+## 2026-04-05 — 5-패스 반복 감사: 21개 버그 수정 + 버그 제로 달성
+
+Phase 2/3 기능 추가 후 전체 코드를 처음부터 다시 읽으면서 버그를 찾는 감사를 5번 반복했다. "버그가 없어질 때까지 반복"이 이 방법론의 핵심.
+
+**왜 반복 감사인가?** 1차에서 발견한 버그를 수정하면 2차에서 그 수정으로 인한 새로운 버그나 놓쳤던 것들이 보인다. 5차까지 하니 비로소 "더 이상 찾을 게 없다"는 상태에 도달했다.
+
+**각 패스의 핵심 발견:**
+
+- **1차** — `msg.errors` 직접 접근으로 크래시 (Claude SDK 타입 불일치), Telegram 중복 콜백 처리, 비-텍스트 채널에서 스레드 생성 크래시
+- **2차** — **Stale Engine Capture**: Telegram이 getter 패턴 없이 엔진 인스턴스를 직접 캡처. `process.env` 스프레드 순서 역전으로 사용자 API 키가 시스템 환경변수에 **무음으로** 덮어씌워지는 버그 (`{ ...process.env, ANTHROPIC_API_KEY: key }` → 올바른 순서)
+- **3차** — HTTP keep-alive 연결로 `server.close()` hang (Node.js 18.2+에서 `closeAllConnections()` 먼저 호출 필요), GitHub `--force-with-lease` tracking branch 없이는 의미 없음
+- **4차** — 테스트 시그니처 불일치: 구현 변경 후 테스트 업데이트 누락 (테스트는 통과하지만 구현과 실제 달라진 상태)
+- **5차** — `handleButton` 핵심 경로 테스트 커버리지 공백 → `button.test.ts` 13개 테스트 신규 작성
+
+**최종 상태**: 201 tests passed (21개 파일), 버그 제로 선언.
+
+---
+
 ## 2026-04-05 — 2~5차 반복 감사: 버그 제로 달성
 
 4번의 감사 사이클을 돌면서 1차에서 발견하지 못한 버그들을 추가로 56개 수정했다.
